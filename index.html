@@ -128,7 +128,8 @@ fetch(url)
           <img class="medal"
                src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/3c/Emoji_u1f3c6.svg/1024px-Emoji_u1f3c6.svg.png">
           
-          <img class="game-cover" src="${capa}" alt="Capa">
+          ${capa ? `<img class="game-cover" src="${capa}" alt="Capa">` : ""}
+
 
           <div class="info">
               <div class="title">${titulo}</div>
@@ -160,3 +161,4 @@ fetch(url)
 
 </body>
 </html>
+
