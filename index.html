@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>Platinados</title>
+
 <style>
     body {
         font-family: "Inter", sans-serif;
@@ -17,9 +18,9 @@
         border-radius: 16px;
         padding: 12px;
         display: flex;
-        align-items: center;
+        align-items: flex-start;
         gap: 12px;
-        margin-bottom: 12px;
+        margin-bottom: 14px;
         box-shadow: 0 2px 6px rgba(0,0,0,0.15);
     }
 
@@ -36,10 +37,10 @@
     }
 
     .title {
-        font-size: 16px;
+        font-size: 17px;
         font-weight: 700;
-        margin-bottom: 4px;
-        color: #7a876f;
+        margin-bottom: 6px;
+        color: #6f7b66;
     }
 
     .progress-bar {
@@ -60,6 +61,18 @@
         width: 28px;
         height: 28px;
         margin-right: 6px;
+        margin-top: 4px;
+    }
+
+    .field {
+        font-size: 13px;
+        margin-top: 3px;
+    }
+
+    .summary {
+        font-size: 13px;
+        margin-top: 10px;
+        opacity: 0.9;
     }
 </style>
 </head>
@@ -68,73 +81,82 @@
 <div id="games"></div>
 
 <script>
-// URL CORRIGIDA — ESTA FUNCIONA
-const url = "https://docs.google.com/spreadsheets/d/1Xm6COXWQlmRb-o3HT0951t_L7Dae3HGxhHCMhRx3Y0s/gviz/tq?tqx=out:json&gid=0";
-
+const url =
+  "https://docs.google.com/spreadsheets/d/1Xm6COXWQlmRb-o3HT0951t_L7Dae3HGxhHCMhRx3Y0s/gviz/tq?tqx=out:json&gid=0";
 
 fetch(url)
-    .then(response => response.text())
-    .then(text => {
-        const json = JSON.parse(text.substring(47, text.length - 2));
+  .then(response => response.text())
+  .then(text => {
+    const json = JSON.parse(text.substring(47, text.length - 2));
 
-        const rows = json.table.rows;
-        const container = document.getElementById("games");
+    const rows = json.table.rows;
+    const container = document.getElementById("games");
 
-        rows.forEach(row => {
-            const titulo = row.c[0]?.v || "";
-            const plataforma = row.c[1]?.v || "";
-            const capa = row.c[2]?.v || "";
-            const feitas = row.c[3]?.v || 0;
-            const totais = row.c[4]?.v || 0;
-            const nota = row.c[5]?.v || "";
-const resumo = row.c[6]?.v || "";
+    rows.forEach(row => {
+      const titulo = row.c[0]?.v || "";
+      const plataforma = row.c[1]?.v || "";
+      const capa = row.c[2]?.v || "";
+      const feitas = row.c[3]?.v || 0;
+      const totais = row.c[4]?.v || 0;
+      const nota = row.c[5]?.v || "";
+      const resumo = row.c[6]?.v || "";
 
-// --- Data da Platina ---
-let dataBr = "";
-const dataCell = row.c[7];
+      // --- Tratamento universal para datas ---
+      let dataBr = "";
+      const dataCell = row.c[7];
 
-if (dataCell) {
-    if (dataCell.f) {
-        dataBr = dataCell.f;
-    } else if (typeof dataCell.v === "number") {
-        const serial = dataCell.v;
-        const date = new Date((serial - 25569) * 86400 * 1000);
-        dataBr = date.toLocaleDateString("pt-BR");
-    } else if (typeof dataCell.v === "string") {
-        dataBr = new Date(dataCell.v).toLocaleDateString("pt-BR");
-    }
-}
+      if (dataCell) {
+        if (dataCell.f) {
+          dataBr = dataCell.f;
+        } else if (typeof dataCell.v === "number") {
+          const serial = dataCell.v;
+          const jsDate = new Date((serial - 25569) * 86400 * 1000);
+          dataBr = jsDate.toLocaleDateString("pt-BR");
+        } else if (typeof dataCell.v === "string") {
+          dataBr = new Date(dataCell.v).toLocaleDateString("pt-BR");
+        }
+      }
 
+      if (!titulo || totais === 0) return;
 
-            if (!titulo || totais === 0) return;
+      const porcentagem = Math.min(100, Math.round((feitas / totais) * 100));
 
-            const porcentagem = Math.min(100, Math.round((feitas / totais) * 100));
+      const card = document.createElement("div");
+      card.className = "game-card";
 
-            const card = document.createElement("div");
-            card.className = "game-card";
+      card.innerHTML = `
+          <img class="medal"
+               src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/3c/Emoji_u1f3c6.svg/1024px-Emoji_u1f3c6.svg.png">
+          
+          <img class="game-cover" src="${capa}" alt="Capa">
 
-            card.innerHTML = `
-                <img class="medal" src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/3c/Emoji_u1f3c6.svg/1024px-Emoji_u1f3c6.svg.png">
-                <img class="game-cover" src="${capa}" alt="Capa">
-                <div class="info">
-                    <div class="title">${titulo}</div>
-                    <div>${feitas} / ${totais} conquistas</div>
-                    <div class="progress-bar">
-                        <div class="progress-fill" style="width:${porcentagem}%"></div>
-                    </div>
-                </div>
-            `;
+          <div class="info">
+              <div class="title">${titulo}</div>
 
-            container.appendChild(card);
-        });
-    })
-    .catch(err => {
-        console.error(err);
-        document.getElementById("games").innerHTML = "Erro ao carregar dados.";
+              ${plataforma ? `<div class="field"><strong>Plataforma:</strong> ${plataforma}</div>` : ""}
+              ${nota ? `<div class="field"><strong>Nota:</strong> ${nota}</div>` : ""}
+              ${dataBr ? `<div class="field"><strong>Data da Platina:</strong> ${dataBr}</div>` : ""}
+
+              <div class="field" style="margin-top:6px;">
+                  <strong>Conquistas:</strong> ${feitas} / ${totais}
+              </div>
+
+              <div class="progress-bar">
+                  <div class="progress-fill" style="width:${porcentagem}%"></div>
+              </div>
+
+              ${resumo ? `<div class="summary">${resumo}</div>` : ""}
+          </div>
+      `;
+
+      container.appendChild(card);
     });
+  })
+  .catch(err => {
+    console.error(err);
+    document.getElementById("games").innerHTML = "Erro ao carregar dados.";
+  });
 </script>
 
 </body>
 </html>
-
-
